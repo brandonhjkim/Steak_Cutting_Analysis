@@ -12,6 +12,14 @@ library(emmeans)
 ```
 
 ```{r}
+# load in data...
+```
+
+```{r}
+# data cleaning...
+```
+
+```{r}
 # fit linear mixed model
 mod <- lmer(trt*muscle*display + (1 | Batch), data = data_name)
 anova(mod)
@@ -32,8 +40,7 @@ ggplot(x = display,
 ) +
 geom_point(y = emmean) +
 geom_errobar(ymin = lower, ymax = upper) +
-*overlay this on the original observed data for a gut check
+# overlay this on the original observed data for a gut check
 geom_jitter(data = original_data, y = observed) +
 facet(~trt)
 ```
-
