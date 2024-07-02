@@ -71,7 +71,7 @@ model_response <- function(df, response, outputs = FALSE) {
   
   if(outputs) {
     print(anova(mod))
-    plot(mod)
+    print(plot(mod))
     print(contrast(muscle_emmeans, method = "pairwise"))
   }
   
