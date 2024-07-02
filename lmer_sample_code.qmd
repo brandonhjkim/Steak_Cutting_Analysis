@@ -6,6 +6,8 @@ editor: visual
 
 ```{r}
 library(tidyverse)
+library(here)
+library(readxl)
 library(lme4)
 library(lmerTest)
 library(emmeans)
@@ -13,10 +15,14 @@ library(emmeans)
 
 ```{r}
 # load in data...
+meat <- read_excel(here('Meat_Data.xlsx'), sheet = 'everything one sheet')
+
 ```
 
 ```{r}
 # data cleaning...
+meat %>%
+  filter(if_any(everything(), ~grepl("\\*", .)))
 ```
 
 ```{r}
