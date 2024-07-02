@@ -1,0 +1,39 @@
+---
+title: "lmer_sample_code"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+```
+
+```{r}
+# fit linear mixed model
+mod <- lmer(trt*muscle*display + (1 | Batch), data = data_name)
+anova(mod)
+plot(mod)
+
+# obtain estimates
+ests <- emmeans(mod, specs = ~ trt:muscle:display, infer = c(T,T))
+
+# compare muscles
+emmeans(mod, specs = ~ muscle | trt:display) |> pairwise()
+```
+
+```{r}
+est |> 
+as_tibble() |>
+ggplot(x = display,
+       color = muscle
+) +
+geom_point(y = emmean) +
+geom_errobar(ymin = lower, ymax = upper) +
+*overlay this on the original observed data for a gut check
+geom_jitter(data = original_data, y = observed) +
+facet(~trt)
+```
+
