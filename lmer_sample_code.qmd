@@ -15,18 +15,28 @@ library(emmeans)
 ```
 
 ```{r}
-# load in data...
-meat <- read_excel(here('Meat_Data.xlsx'), sheet = 'everything one sheet')
+# load in data
+color <- read_excel(here('Meat_Data.xlsx'), sheet = 'sorted beef color ')
+tbars <- read_excel(here('Meat_Data.xlsx'), sheet = 'sorted beef TBARS')
+ph <- read_excel(here('Meat_Data.xlsx'), sheet = 'pH')
 
 ```
 
 ```{r}
-# data cleaning...
-meat %>%
-  filter(if_any(everything(), ~grepl("\\*", .)))
+# clean set
+master <- color %>%
+  mutate(batch = toupper(batch),
+         steak = ifelse(batch == "A" & trt == "KK" & display == 0 & index == 2, "b", steak)) %>%
+  left_join(tbars, by = c("batch" = "Batch", "steak" = "patty replicates", "display" = "Display",
+                           "index", "trt", "muscle")) %>%
+  inner_join(ph, by = c("trt" = "Cutting", "steak", "muscle", "index", "batch", "display")) %>%
+  select(batch, trt, display, index, steak, muscle, `average L`, `average a`, `average b`, `Abs531 average`, `pH-ave`)
+
 ```
 
 ```{r}
+# SAMPLE CODE 
+
 # fit linear mixed model
 mod <- lmer(trt*muscle*display + (1 | Batch), data = data_name)
 anova(mod)
