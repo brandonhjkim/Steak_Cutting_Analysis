@@ -12,6 +12,7 @@ library(readxl)
 library(lme4)
 library(lmerTest)
 library(emmeans)
+library(janitor)
 ```
 
 ```{r}
@@ -19,7 +20,6 @@ library(emmeans)
 color <- read_excel(here('Meat_Data.xlsx'), sheet = 'sorted beef color ')
 tbars <- read_excel(here('Meat_Data.xlsx'), sheet = 'sorted beef TBARS')
 ph <- read_excel(here('Meat_Data.xlsx'), sheet = 'pH')
-
 ```
 
 ```{r}
@@ -30,34 +30,61 @@ master <- color %>%
   left_join(tbars, by = c("batch" = "Batch", "steak" = "patty replicates", "display" = "Display",
                            "index", "trt", "muscle")) %>%
   inner_join(ph, by = c("trt" = "Cutting", "steak", "muscle", "index", "batch", "display")) %>%
-  select(batch, trt, display, index, steak, muscle, `average L`, `average a`, `average b`, `Abs531 average`, `pH-ave`)
-
+  select(batch, trt, display, index, steak, muscle, `average L`, `average a`, `average b`, `Abs531 average`, `pH-ave`) %>%
+  clean_names() %>%
+  rename('ph_average' = 'p_h_ave')
 ```
 
 ```{r}
-# SAMPLE CODE 
+# Function to plot estimated marginal means
+plot_model <- function(response, ests, df) {
+  ests_tibble <- as_tibble(ests)
 
-# fit linear mixed model
-mod <- lmer(trt*muscle*display + (1 | Batch), data = data_name)
-anova(mod)
-plot(mod)
+  ggplot(ests_tibble, aes(x = display, y = emmean, color = muscle)) +
+    geom_point() +
+    geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.2) +
+    # Overlay the original observed data for a gut check
+    geom_point(data = df, aes(x = display, y = .data[[response]]), alpha = 0.5, width = 0.1, color = "grey") +
+    facet_wrap(~ trt) +
+    labs(title = paste("Estimated Marginal Means for", response, "with Observed Data"),
+         x = "Display",
+         y = response) +
+    scale_x_continuous(breaks = unique(df$display)) +
+    theme_bw() +
+    theme(
+      panel.grid.minor.x = element_blank(),
+      panel.grid.minor.y = element_blank()
+      )
+}
 
-# obtain estimates
-ests <- emmeans(mod, specs = ~ trt:muscle:display, infer = c(T,T))
-
-# compare muscles
-emmeans(mod, specs = ~ muscle | trt:display) |> pairwise()
+# Function to model response and visualize results
+model_response <- function(df, response, outputs = FALSE) {
+  # fit linear mixed model
+  response_formula <- as.formula(paste(response, "~ trt*muscle*display + (1 | batch)"))
+  mod <- lmer(response_formula, data = df)
+  
+  # obtain estimates
+  ests <- emmeans(mod, specs = ~ trt:muscle:display, infer = c(TRUE, TRUE))
+  
+  # compare muscles
+  muscle_emmeans <- emmeans(mod, specs = ~ muscle | trt:display)
+  
+  if(outputs) {
+    print(anova(mod))
+    plot(mod)
+    print(contrast(muscle_emmeans, method = "pairwise"))
+  }
+  
+  # plot model
+  plot_model(response, ests, df)
+}
 ```
 
 ```{r}
-est |> 
-as_tibble() |>
-ggplot(x = display,
-       color = muscle
-) +
-geom_point(y = emmean) +
-geom_errobar(ymin = lower, ymax = upper) +
-# overlay this on the original observed data for a gut check
-geom_jitter(data = original_data, y = observed) +
-facet(~trt)
+response_cols <- colnames(master[7:length(colnames(master))])
+
+lapply(response_cols, function(response) {
+  model_response(master, response, TRUE)
+})
 ```
+
