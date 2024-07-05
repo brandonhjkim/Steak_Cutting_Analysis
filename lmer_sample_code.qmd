@@ -32,7 +32,7 @@ master <- color %>%
   inner_join(ph, by = c("trt" = "Cutting", "steak", "muscle", "index", "batch", "display")) %>%
   select(batch, trt, display, index, steak, muscle, `average L`, `average a`, `average b`, `calculated TEP equivalent`, `pH-ave`) %>%
   clean_names() %>%
-  rename('ph_average' = 'p_h_ave')
+  rename('ph_average' = 'p_h_ave', 'tep' = 'calculated_tep_equivalent')
 ```
 
 ```{r}
