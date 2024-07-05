@@ -30,7 +30,7 @@ master <- color %>%
   left_join(tbars, by = c("batch" = "Batch", "steak" = "patty replicates", "display" = "Display",
                            "index", "trt", "muscle")) %>%
   inner_join(ph, by = c("trt" = "Cutting", "steak", "muscle", "index", "batch", "display")) %>%
-  select(batch, trt, display, index, steak, muscle, `average L`, `average a`, `average b`, `Abs531 average`, `pH-ave`) %>%
+  select(batch, trt, display, index, steak, muscle, `average L`, `average a`, `average b`, `calculated TEP equivalent`, `pH-ave`) %>%
   clean_names() %>%
   rename('ph_average' = 'p_h_ave')
 ```
@@ -84,7 +84,29 @@ model_response <- function(df, response, outputs = FALSE) {
 response_cols <- colnames(master[7:length(colnames(master))])
 
 lapply(response_cols, function(response) {
-  model_response(master, response, TRUE)
+  print(paste('Analysis for', response))
+  print(model_response(master, response, TRUE))
+  print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
 })
+```
+
+```{r}
+response <- 'average_a'
+# response_formula <- as.formula(paste(response, "~ trt*muscle*display + (1 | batch)  + (1 | index) + (1 | batch:index)"))
+response_formula <- as.formula(paste(response, "~ trt*muscle*display + (1 | batch)"))
+mod <- lmer(response_formula, data = master)
+emmeans(mod, specs = ~ trt:muscle:display, infer = c(TRUE, TRUE))
+summary(mod)
+```
+
+```{r}
+library(ggeffects)
+ggpredict(mod, terms = c('trt', 'muscle', 'display', 'batch')) %>% plot()
+```
+
+```{r}
+library(car)
+icc(mod)
+vif(mod)
 ```
 
