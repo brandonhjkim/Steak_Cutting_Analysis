@@ -1,19 +1,25 @@
 ---
-title: "lmer_sample_code"
+title: "Steak Cutting Analysis"
 format: html
 editor: visual
+embed-resources: true
 ---
+
+# Set-up
 
 ```{r}
 #| message: false
-library(tidyverse)
 library(here)
 library(readxl)
 library(lme4)
 library(lmerTest)
 library(emmeans)
 library(janitor)
+library(multcomp)
+library(tidyverse)
 ```
+
+## Data
 
 ```{r}
 # load in data
@@ -23,7 +29,7 @@ ph <- read_excel(here('Meat_Data.xlsx'), sheet = 'pH')
 ```
 
 ```{r}
-# clean set
+# clean and combine data
 master <- color %>%
   mutate(batch = toupper(batch),
          steak = ifelse(batch == "A" & trt == "KK" & display == 0 & index == 2, "b", steak)) %>%
@@ -32,81 +38,291 @@ master <- color %>%
   inner_join(ph, by = c("trt" = "Cutting", "steak", "muscle", "index", "batch", "display")) %>%
   select(batch, trt, display, index, steak, muscle, `average L`, `average a`, `average b`, `calculated TEP equivalent`, `pH-ave`) %>%
   clean_names() %>%
-  rename('ph_average' = 'p_h_ave', 'tep' = 'calculated_tep_equivalent')
+  rename('ph_average' = 'p_h_ave', 'tep' = 'calculated_tep_equivalent') %>%
+  mutate(display = as.factor(display))
 ```
+
+# Linear Mixed Effects Regression
+## Functions
 
 ```{r}
 # Function to plot estimated marginal means
-plot_model <- function(response, ests, df) {
+plot_model <- function(df, response, ests) {
   ests_tibble <- as_tibble(ests)
 
   ggplot(ests_tibble, aes(x = display, y = emmean, color = muscle)) +
     geom_point() +
     geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.2) +
     # Overlay the original observed data for a gut check
-    geom_point(data = df, aes(x = display, y = .data[[response]]), alpha = 0.5, width = 0.1, color = "grey") +
+    # geom_point(data = df, aes(x = display, y = .data[[response]]), alpha = 0.5, width = 0.1, color = "grey") +
     facet_wrap(~ trt) +
     labs(title = paste("Estimated Marginal Means for", response, "with Observed Data"),
          x = "Display",
          y = response) +
-    scale_x_continuous(breaks = unique(df$display)) +
     theme_bw() +
     theme(
       panel.grid.minor.x = element_blank(),
       panel.grid.minor.y = element_blank()
       )
 }
-
-# Function to model response and visualize results
-model_response <- function(df, response, outputs = FALSE) {
-  # fit linear mixed model
-  response_formula <- as.formula(paste(response, "~ trt*muscle*display + (1 | batch)"))
-  mod <- lmer(response_formula, data = df)
-  
-  # obtain estimates
-  ests <- emmeans(mod, specs = ~ trt:muscle:display, infer = c(TRUE, TRUE))
-  
-  # compare muscles
-  muscle_emmeans <- emmeans(mod, specs = ~ muscle | trt:display)
-  
-  if(outputs) {
-    print(anova(mod))
-    print(plot(mod))
-    print(contrast(muscle_emmeans, method = "pairwise"))
-  }
-  
-  # plot model
-  plot_model(response, ests, df)
-}
 ```
+
+## Average L*
+### Model Selection
 
 ```{r}
-response_cols <- colnames(master[7:length(colnames(master))])
+chisq.test(master$average_l, master$batch)
 
-lapply(response_cols, function(response) {
-  print(paste('Analysis for', response))
-  print(model_response(master, response, TRUE))
-  print('-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-')
-})
+null_l <- lmer(average_l ~ (1 | batch), data = master)
+
+# Main effects
+m1_l <- lmer(average_l ~ trt + muscle + display + (1 | batch), data = master)
+
+# All interactions + main effects
+m2_l <- lmer(average_l ~ trt*muscle*display + (1 | batch), data = master)
+
+# Two-way interactions + main effects
+m3_l <- lmer(average_l ~ trt + muscle + display + 
+                     trt:muscle + trt:display + muscle:display + 
+                     (1 | batch), 
+             data = master)
+
+# summary(null_l, corr = FALSE)
+# summary(m1_l, corr = FALSE)
+# summary(m2_l, corr = FALSE)
+# summary(m3_l, corr = FALSE)
+
+performance::compare_performance(null_l, m1_l, m2_l, m3_l)
+# anova(m1_l, null_l)
+# anova(m1_l, m2_l)
+# anova(m3_l, m2_l)
+# anova(m1_l, m3_l)
+
+anova(m3_l)
 ```
+
+Model 3 is the best model
+
+### Plots
+```{r}
+ests <- emmeans(m3_l, 
+                specs = ~ trt + muscle + display + 
+                     trt:muscle + trt:display + muscle:display, 
+                infer = c(TRUE, TRUE))
+
+plot_model(master, 'average_l', ests)
+
+letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+```
+
+## Average a
+### Model Selection
 
 ```{r}
-response <- 'average_a'
-# response_formula <- as.formula(paste(response, "~ trt*muscle*display + (1 | batch)  + (1 | index) + (1 | batch:index)"))
-response_formula <- as.formula(paste(response, "~ trt*muscle*display + (1 | batch)"))
-mod <- lmer(response_formula, data = master)
-emmeans(mod, specs = ~ trt:muscle:display, infer = c(TRUE, TRUE))
-summary(mod)
+chisq.test(master$average_a, master$batch)
+
+null_a <- lmer(average_a ~ (1 | batch), data = master)
+
+# Main effects
+m1_a <- lmer(average_a ~ trt + muscle + display + (1 | batch), data = master)
+
+# All interactions + main effects
+m2_a <- lmer(average_a ~ trt*muscle*display + (1 | batch), data = master)
+
+# Two-way interactions + main effects
+m3_a <- lmer(average_a ~ trt + muscle + display + 
+                     trt:muscle + trt:display + muscle:display + 
+                     (1 | batch), 
+             data = master)
+
+# summary(null_a, corr = FALSE)
+# summary(m1_a, corr = FALSE)
+# summary(m2_a, corr = FALSE)
+# summary(m3_a, corr = FALSE)
+
+performance::compare_performance(null_a, m1_a, m2_a, m3_a)
+# anova(m1_a, null_a)
+# anova(m1_a, m2_a)
+# anova(m3_a, m2_a)
+# anova(m1_a, m3_a)
+
+anova(m1_a)
 ```
+
+Model 1 is the best model
+
+### Plots
+```{r}
+ests <- emmeans(m1_a, 
+                specs = ~ trt + muscle + display, 
+                infer = c(TRUE, TRUE))
+
+plot_model(master, 'average_a', ests)
+
+letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+```
+
+## Average b
+
+### Model Selection
 
 ```{r}
-library(ggeffects)
-ggpredict(mod, terms = c('trt', 'muscle', 'display', 'batch')) %>% plot()
+chisq.test(master$average_b, master$batch)
+
+null_b <- lmer(average_b ~ (1 | batch), data = master)
+
+# Main effects
+m1_b <- lmer(average_b ~ trt + muscle + display + (1 | batch), data = master)
+
+# All interactions + main effects
+m2_b <- lmer(average_b ~ trt*muscle*display + (1 | batch), data = master)
+
+# Two-way interactions + main effects
+m3_b <- lmer(average_b ~ trt + muscle + display + 
+                     trt:muscle + trt:display + muscle:display + 
+                     (1 | batch), 
+             data = master)
+
+# summary(null_b, corr = FALSE)
+# summary(m1_b, corr = FALSE)
+# summary(m2_b, corr = FALSE)
+# summary(m3_b, corr = FALSE)
+
+performance::compare_performance(null_b, m1_b, m2_b, m3_b)
+# anova(m1_b, null_b)
+# anova(m1_b, m2_b)
+# anova(m3_b, m2_b)
+# anova(m1_b, m3_b)
+
+anova(m1_b)
 ```
+
+Model 1 is the best model
+
+### Plots
+```{r}
+ests <- emmeans(m1_b, 
+                specs = ~ trt + muscle + display, 
+                infer = c(TRUE, TRUE))
+
+plot_model(master, 'average_b', ests)
+
+letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+```
+
+## TEP
+
+### Model Selection
 
 ```{r}
-library(car)
-icc(mod)
-vif(mod)
+chisq.test(master$tep, master$batch)
+
+null_tep <- lmer(tep ~ (1 | batch), data = master)
+
+# Main effects
+m1_tep <- lmer(tep ~ trt + muscle + display + (1 | batch), data = master)
+
+# All interactions + main effects
+m2_tep <- lmer(tep ~ trt*muscle*display + (1 | batch), data = master)
+
+# Two-way interactions + main effects
+m3_tep <- lmer(tep ~ trt + muscle + display + 
+                     trt:muscle + trt:display + muscle:display + 
+                     (1 | batch), 
+             data = master)
+
+# summary(null_tep, corr = FALSE)
+# summary(m1_tep, corr = FALSE)
+# summary(m2_tep, corr = FALSE)
+# summary(m3_tep, corr = FALSE)
+
+performance::compare_performance(null_tep, m1_tep, m2_tep, m3_tep)
+# anova(m1_tep, null_tep)
+# anova(m1_tep, m2_tep)
+# anova(m3_tep, m2_tep)
+# anova(m1_tep, m3_tep)
+
+anova(m1_a)
 ```
 
+Model 1 is the best model
+
+### Plots
+```{r}
+ests <- emmeans(m1_tep, 
+                specs = ~ trt + muscle + display, 
+                infer = c(TRUE, TRUE))
+
+plot_model(master, 'tep', ests)
+
+letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+```
+
+## Average pH
+
+### Model Selection
+
+```{r}
+chisq.test(master$ph_average, master$batch)
+
+null_ph <- lmer(ph_average ~ (1 | batch), data = master)
+
+# Main effects
+m1_ph <- lmer(ph_average ~ trt + muscle + display + (1 | batch), data = master)
+
+# All interactions + main effects
+m2_ph <- lmer(ph_average ~ trt*muscle*display + (1 | batch), data = master)
+
+# Two-way interactions + main effects
+m3_ph <- lmer(ph_average ~ trt + muscle + display + 
+                     trt:muscle + trt:display + muscle:display + 
+                     (1 | batch), 
+             data = master)
+
+# summary(null_ph, corr = FALSE)
+# summary(m1_ph, corr = FALSE)
+# summary(m2_ph, corr = FALSE)
+# summary(m3_ph, corr = FALSE)
+
+performance::compare_performance(null_ph, m1_ph, m2_ph, m3_ph)
+# anova(m1_ph, null_ph)
+# anova(m1_ph, m2_ph)
+# anova(m3_ph, m2_ph)
+# anova(m1_ph, m3_ph)
+
+anova(m1_a)
+```
+
+Model 1 is the best model
+
+### Plots
+```{r}
+ests <- emmeans(m1_ph, 
+                specs = ~ trt + muscle + display, 
+                infer = c(TRUE, TRUE))
+
+plot_model(master, 'ph_average', ests)
+
+letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+```
+
+# Interpretations
+
+- ICC:
+
+- ANOVA Output:
+  + trt:
+  + muscle:
+  + display:
+
+- Letter Plot:
