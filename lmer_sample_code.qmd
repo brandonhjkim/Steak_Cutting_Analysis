@@ -254,7 +254,7 @@ performance::compare_performance(null_tep, m1_tep, m2_tep, m3_tep)
 # anova(m3_tep, m2_tep)
 # anova(m1_tep, m3_tep)
 
-anova(m1_a)
+anova(m1_tep)
 ```
 
 Model 1 is the best model
@@ -305,7 +305,7 @@ performance::compare_performance(null_ph, m1_ph, m2_ph, m3_ph)
 # anova(m3_ph, m2_ph)
 # anova(m1_ph, m3_ph)
 
-anova(m1_a)
+anova(m1_ph)
 ```
 
 Model 1 is the best model
@@ -326,10 +326,16 @@ plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated M
 
 # Interpretations
 
--   ICC: $$𝛔^2_{between}/(𝛔^2_{between} + 𝛔^2_{within})$$
+-   Adjusted ICC: $$𝛔^2_{between}/(𝛔^2_{between} + 𝛔^2_{within})$$
+
+    -   Adjusted ICC: Focuses only on random effects, ignoring fixed effects. Useful for analyzing the impact of random effects alone.
+
+    -   Unadjusted ICC: Includes both random and fixed effects in the variability calculation. Useful for a broader understanding of variability, including the influence of fixed effects.
 
     -   \_\_% of the variability in {response variable} is accounted for by the difference between {grouping variable}.
     -   i.e. 42% of the variability in Average L\* is accounted for by the difference between batches (and the remaining 58% is due to the difference within batches).
+    
+    - NOTE: We are using the Adjusted ICC.
 
 -   ANOVA Output:
 
