@@ -43,6 +43,7 @@ master <- color %>%
 ```
 
 # Linear Mixed Effects Regression
+
 ## Functions
 
 ```{r}
@@ -67,7 +68,8 @@ plot_model <- function(df, response, ests) {
 }
 ```
 
-## Average L*
+## Average L\*
+
 ### Model Selection
 
 ```{r}
@@ -104,6 +106,7 @@ anova(m3_l)
 Model 3 is the best model
 
 ### Plots
+
 ```{r}
 ests <- emmeans(m3_l, 
                 specs = ~ trt + muscle + display + 
@@ -118,6 +121,7 @@ plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated M
 ```
 
 ## Average a
+
 ### Model Selection
 
 ```{r}
@@ -154,6 +158,7 @@ anova(m1_a)
 Model 1 is the best model
 
 ### Plots
+
 ```{r}
 ests <- emmeans(m1_a, 
                 specs = ~ trt + muscle + display, 
@@ -204,6 +209,7 @@ anova(m1_b)
 Model 1 is the best model
 
 ### Plots
+
 ```{r}
 ests <- emmeans(m1_b, 
                 specs = ~ trt + muscle + display, 
@@ -254,6 +260,7 @@ anova(m1_a)
 Model 1 is the best model
 
 ### Plots
+
 ```{r}
 ests <- emmeans(m1_tep, 
                 specs = ~ trt + muscle + display, 
@@ -304,6 +311,7 @@ anova(m1_a)
 Model 1 is the best model
 
 ### Plots
+
 ```{r}
 ests <- emmeans(m1_ph, 
                 specs = ~ trt + muscle + display, 
@@ -318,11 +326,15 @@ plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated M
 
 # Interpretations
 
-- ICC:
+-   ICC: $$𝛔^2_{between}/(𝛔^2_{between} + 𝛔^2_{within})$$
 
-- ANOVA Output:
-  + trt:
-  + muscle:
-  + display:
+    -   \_\_% of the variability in {response variable} is accounted for by the difference between {grouping variable}.
+    -   i.e. 42% of the variability in Average L\* is accounted for by the difference between batches (and the remaining 58% is due to the difference within batches).
 
-- Letter Plot:
+-   ANOVA Output:
+
+    -   trt:
+    -   muscle:
+    -   display:
+
+-   Letter Plot:
