@@ -57,7 +57,7 @@ plot_model <- function(df, response, ests) {
     # Overlay the original observed data for a gut check
     # geom_point(data = df, aes(x = display, y = .data[[response]]), alpha = 0.5, width = 0.1, color = "grey") +
     facet_wrap(~ trt) +
-    labs(title = paste("Estimated Marginal Means for", response, "with Observed Data"),
+    labs(title = paste("Estimated Marginal Means for", response),
          x = "Display",
          y = response) +
     theme_bw() +
