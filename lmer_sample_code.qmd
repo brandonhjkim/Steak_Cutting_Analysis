@@ -122,9 +122,6 @@ letter_plot <- letter_plot[order(letter_plot$trt, letter_plot$display, letter_pl
 plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + 
   theme_bw() +
   geom_hline(yintercept = seq(2.5, 18.5, 2))
-
-ests
-letter_plot
 ```
 
 ## Average a
