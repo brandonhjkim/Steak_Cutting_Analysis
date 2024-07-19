@@ -112,7 +112,8 @@ Model 3 is the best model
 ests <- emmeans(m3_l, 
                 specs = ~ trt + muscle + display + 
                      trt:muscle + trt:display + muscle:display, 
-                infer = c(TRUE, TRUE))
+                infer = c(TRUE, TRUE),
+                level = .99)
 
 plot_model(master, 'average_l', ests)
 
@@ -166,7 +167,8 @@ Model 1 is the best model
 ```{r}
 ests <- emmeans(m1_a, 
                 specs = ~ trt + muscle + display, 
-                infer = c(TRUE, TRUE))
+                infer = c(TRUE, TRUE),
+                level = .99)
 
 ests
 letter_plot
@@ -221,7 +223,8 @@ Model 1 is the best model
 ```{r}
 ests <- emmeans(m1_b, 
                 specs = ~ trt + muscle + display, 
-                infer = c(TRUE, TRUE))
+                infer = c(TRUE, TRUE),
+                level = .99)
 
 plot_model(master, 'average_b', ests)
 
@@ -274,7 +277,8 @@ Model 1 is the best model
 ```{r}
 ests <- emmeans(m1_tep, 
                 specs = ~ trt + muscle + display, 
-                infer = c(TRUE, TRUE))
+                infer = c(TRUE, TRUE),
+                level = .99)
 
 plot_model(master, 'tep', ests)
 
@@ -327,7 +331,8 @@ Model 1 is the best model
 ```{r}
 ests <- emmeans(m1_ph, 
                 specs = ~ trt + muscle + display, 
-                infer = c(TRUE, TRUE))
+                infer = c(TRUE, TRUE),
+                level = .99)
 
 plot_model(master, 'ph_average', ests)
 
