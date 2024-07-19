@@ -117,11 +117,14 @@ ests <- emmeans(m3_l,
 
 plot_model(master, 'average_l', ests)
 
-letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- cld(ests, level = .99, adjust = "tukey", Letters = letters)
 letter_plot <- letter_plot[order(letter_plot$trt, letter_plot$display, letter_plot$muscle), ]
 plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + 
   theme_bw() +
   geom_hline(yintercept = seq(2.5, 18.5, 2))
+
+ests
+letter_plot
 ```
 
 ## Average a
@@ -174,7 +177,7 @@ ests
 letter_plot
 plot_model(master, 'average_a', ests)
 
-letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- cld(ests, level = .99, adjust = "tukey", Letters = letters)
 letter_plot <- letter_plot[order(letter_plot$trt, letter_plot$display, letter_plot$muscle), ]
 plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + 
   theme_bw() +
@@ -228,7 +231,7 @@ ests <- emmeans(m1_b,
 
 plot_model(master, 'average_b', ests)
 
-letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- cld(ests, level = .99, adjust = "tukey", Letters = letters)
 letter_plot <- letter_plot[order(letter_plot$trt, letter_plot$display, letter_plot$muscle), ]
 plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + 
   theme_bw() +
@@ -282,7 +285,7 @@ ests <- emmeans(m1_tep,
 
 plot_model(master, 'tep', ests)
 
-letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- cld(ests, level = .99, adjust = "tukey", Letters = letters)
 letter_plot <- letter_plot[order(letter_plot$trt, letter_plot$display, letter_plot$muscle), ]
 plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + 
   theme_bw() +
@@ -336,7 +339,7 @@ ests <- emmeans(m1_ph,
 
 plot_model(master, 'ph_average', ests)
 
-letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
+letter_plot <- cld(ests, level = .99, adjust = "tukey", Letters = letters)
 letter_plot <- letter_plot[order(letter_plot$trt, letter_plot$display, letter_plot$muscle), ]
 plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + 
   theme_bw() +
