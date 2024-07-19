@@ -101,6 +101,7 @@ performance::compare_performance(null_l, m1_l, m2_l, m3_l)
 # anova(m1_l, m3_l)
 
 anova(m3_l)
+summary(m3_l)
 ```
 
 Model 3 is the best model
@@ -116,8 +117,8 @@ ests <- emmeans(m3_l,
 plot_model(master, 'average_l', ests)
 
 letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
-letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
-plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+letter_plot <- letter_plot[order(letter_plot$display, letter_plot$trt, letter_plot$muscle), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + theme_bw()
 ```
 
 ## Average a
@@ -153,6 +154,7 @@ performance::compare_performance(null_a, m1_a, m2_a, m3_a)
 # anova(m1_a, m3_a)
 
 anova(m1_a)
+summary(m1_a)
 ```
 
 Model 1 is the best model
@@ -164,11 +166,13 @@ ests <- emmeans(m1_a,
                 specs = ~ trt + muscle + display, 
                 infer = c(TRUE, TRUE))
 
+ests
+letter_plot
 plot_model(master, 'average_a', ests)
 
 letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
-letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
-plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+letter_plot <- letter_plot[order(letter_plot$display, letter_plot$trt, letter_plot$muscle), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + theme_bw()
 ```
 
 ## Average b
@@ -218,8 +222,8 @@ ests <- emmeans(m1_b,
 plot_model(master, 'average_b', ests)
 
 letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
-letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
-plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+letter_plot <- letter_plot[order(letter_plot$display, letter_plot$trt, letter_plot$muscle), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + theme_bw()
 ```
 
 ## TEP
@@ -269,8 +273,8 @@ ests <- emmeans(m1_tep,
 plot_model(master, 'tep', ests)
 
 letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
-letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
-plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+letter_plot <- letter_plot[order(letter_plot$display, letter_plot$trt, letter_plot$muscle), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + theme_bw()
 ```
 
 ## Average pH
@@ -320,8 +324,8 @@ ests <- emmeans(m1_ph,
 plot_model(master, 'ph_average', ests)
 
 letter_plot <- cld(ests, level = .01, adjust = "tukey", Letters = letters)
-letter_plot <- letter_plot[order(letter_plot$muscle, letter_plot$trt, letter_plot$display), ]
-plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means")
+letter_plot <- letter_plot[order(letter_plot$display, letter_plot$trt, letter_plot$muscle), ]
+plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated Marginal Means") + theme_bw()
 ```
 
 # Interpretations
@@ -333,9 +337,10 @@ plot(letter_plot, main = "Letter Plot for Wool and Tension", ylab = "Estimated M
     -   Unadjusted ICC: Includes both random and fixed effects in the variability calculation. Useful for a broader understanding of variability, including the influence of fixed effects.
 
     -   \_\_% of the variability in {response variable} is accounted for by the difference between {grouping variable}.
+
     -   i.e. 42% of the variability in Average L\* is accounted for by the difference between batches (and the remaining 58% is due to the difference within batches).
-    
-    - NOTE: We are using the Adjusted ICC.
+
+    -   NOTE: We are using the Adjusted ICC.
 
 -   ANOVA Output:
 
