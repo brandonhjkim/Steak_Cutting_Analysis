@@ -25,14 +25,14 @@ library(tidyverse)
 # load in data
 
 # For Master Set including a, b, l, tep and ph 
-color <- read_excel('Meat_Data.xlsx', sheet = 'sorted beef color ')
-tbars <- read_excel('Meat_Data.xlsx', sheet = 'sorted beef TBARS')
-ph <- read_excel('Meat_Data.xlsx', sheet = 'pH')
+color <- read_excel('Data/Meat_Data.xlsx', sheet = 'sorted beef color ')
+tbars <- read_excel('Data/Meat_Data.xlsx', sheet = 'sorted beef TBARS')
+ph <- read_excel('Data/Meat_Data.xlsx', sheet = 'pH')
 
 # For % yield, microbial colonies and ecoli 
-full <- read_excel('Meat_Data.xlsx', sheet = 'everything one sheet')
-apc <- read_excel('APC_Data.xlsx')
-ecoli <- read_excel('Coliforms_Data.xlsx')
+full <- read_excel('Data/Meat_Data.xlsx', sheet = 'everything one sheet')
+apc <- read_excel('Data/APC_Data.xlsx')
+ecoli <- read_excel('Data/Coliforms_Data.xlsx')
 ```
 
 ```{r}
@@ -60,7 +60,6 @@ bact <- apc %>%
   select(acp, coliforms)
 ```
 
-
 ```{r}
 # % yield 
 full <- full %>% 
@@ -73,7 +72,6 @@ full <- full %>%
   cbind(bact)
   
 ```
-
 
 # Linear Mixed Effects Regression
 
@@ -166,7 +164,7 @@ fit_lmer("tep")
 fit_lmer("ph_average")
 ```
 
-## % Yield 
+## % Yield
 
 ```{r}
 fit_lmer2("yield")
