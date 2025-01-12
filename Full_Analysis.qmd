@@ -1,0 +1,207 @@
+---
+title: "Steak Cutting Analysis"
+format: html
+editor: visual
+embed-resources: true
+---
+
+# Set-up
+
+```{r}
+#| message: false
+library(readxl)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(janitor)
+library(multcomp)
+library(multcompView) 
+library(tidyverse)
+```
+
+## Data
+
+```{r}
+# load in data
+
+# For Master Set including a, b, l, tep and ph 
+color <- read_excel('Meat_Data.xlsx', sheet = 'sorted beef color ')
+tbars <- read_excel('Meat_Data.xlsx', sheet = 'sorted beef TBARS')
+ph <- read_excel('Meat_Data.xlsx', sheet = 'pH')
+
+# For % yield, microbial colonies and ecoli 
+full <- read_excel('Meat_Data.xlsx', sheet = 'everything one sheet')
+apc <- read_excel('APC_Data.xlsx')
+ecoli <- read_excel('Coliforms_Data.xlsx')
+```
+
+```{r}
+# clean and combine data
+master <- color %>%
+  mutate(batch = toupper(batch),
+         steak = ifelse(batch == "A" & trt == "KK" & display == 0 & index == 2, "b", steak)) %>%
+  left_join(tbars, by = c("batch" = "Batch", "steak" = "patty replicates", "display" = "Display",
+                           "index", "trt", "muscle")) %>%
+  inner_join(ph, by = c("trt" = "Cutting", "steak", "muscle", "index", "batch", "display")) %>%
+  select(batch, trt, display, index, steak, muscle, `average L`, `average a`, `average b`, `calculated TEP equivalent`, `pH-ave`) %>%
+  clean_names() %>%
+  rename('ph_average' = 'p_h_ave', 'tep' = 'calculated_tep_equivalent') %>%
+  mutate(display = as.factor(display))
+```
+
+```{r}
+# Obtaining bacteria information 
+bact <- apc %>%
+  inner_join(ecoli) %>%
+  mutate(trt = str_sub(type, 1, 2),
+         batch = str_sub(type, 3, 3),
+         display = as.factor(display)) %>%
+  arrange(trt, display) %>%
+  select(acp, coliforms)
+```
+
+
+```{r}
+# % yield 
+full <- full %>% 
+  mutate(display_yield_beef = ifelse(display_yield_beef == "*", NA, display_yield_beef),
+         display_yield_beef = as.numeric(display_yield_beef),
+         display = as.factor(display)) %>%
+  inner_join(master, by = c("beef_loin_lightness" = "average_l", "beef_loin_yellowness" = "average_b")) %>% #getting batch col 
+  select(trt.x, display.x, index.x, batch, display_yield_beef) %>%
+  rename("trt" = "trt.x", 'display' = 'display.x', 'index' = 'index.x', 'yield' = 'display_yield_beef') %>%
+  cbind(bact)
+  
+```
+
+
+# Linear Mixed Effects Regression
+
+## Functions
+
+```{r}
+fit_lmer <- function(rv, alpha = 0.95) {
+  
+  # Model 
+  mod <- lmer(get(rv) ~ trt*muscle*display + (1 | batch), data = master)
+  print("Summary")
+  print(summary(mod))
+
+  # Contrasts
+  ests <- emmeans(mod, specs = ~ trt + display | muscle, infer = c(TRUE, TRUE), level = alpha)
+  print("Contrasts")
+  print(contrast(ests, method = "pairwise"))
+
+  # Letters 
+  lets <- cld(ests, alpha = alpha, Letters = letters)
+  print("Letters")
+  print(lets)
+  
+  # Plot 
+  plot <- ests %>% 
+    as_tibble() %>%
+    ggplot(aes(x = display, y = emmean, color = muscle)) +
+      geom_point() +
+      geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.2) +
+      facet_wrap(~ trt) +
+      labs(title = paste("Estimated Marginal Means for", rv),
+           x = "Display",
+           y = rv) +
+      theme_bw() +
+      theme(
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()
+        ) 
+  print(plot)
+
+}
+
+fit_lmer2 <- function(rv, alpha = 0.95) {
+  
+  # Model 
+  mod <- lmer(get(rv) ~ trt*display + (1 | batch), data = full)
+  print("Summary")
+  print(summary(mod))
+
+  # Contrasts
+  ests <- emmeans(mod, specs = ~ trt + display, infer = c(TRUE, TRUE), level = alpha)
+  print("Contrasts")
+  print(contrast(ests, method = "pairwise"))
+
+  # Letters 
+  lets <- cld(ests, alpha = alpha, Letters = letters)
+  print("Letters")
+  print(lets)
+
+}
+```
+
+## Average L\*
+
+```{r}
+fit_lmer("average_l")
+```
+
+## Average a
+
+```{r}
+fit_lmer("average_a")
+```
+
+## Average b
+
+```{r}
+fit_lmer("average_b")
+```
+
+## TEP
+
+```{r}
+fit_lmer("tep")
+```
+
+## ph Average
+
+```{r}
+fit_lmer("ph_average")
+```
+
+## % Yield 
+
+```{r}
+fit_lmer2("yield")
+```
+
+## ACP
+
+```{r}
+fit_lmer2("acp")
+```
+
+## coliforms
+
+```{r}
+fit_lmer2("coliforms")
+```
+
+# Interpretations
+
+-   Adjusted ICC: $$𝛔^2_{between}/(𝛔^2_{between} + 𝛔^2_{within})$$
+
+    -   Adjusted ICC: Focuses only on random effects, ignoring fixed effects. Useful for analyzing the impact of random effects alone.
+
+    -   Unadjusted ICC: Includes both random and fixed effects in the variability calculation. Useful for a broader understanding of variability, including the influence of fixed effects.
+
+    -   \_\_% of the variability in {response variable} is accounted for by the difference between {grouping variable}.
+
+    -   i.e. 42% of the variability in Average L\* is accounted for by the difference between batches (and the remaining 58% is due to the difference within batches).
+
+    -   NOTE: We are using the Adjusted ICC.
+
+-   ANOVA Output:
+
+    -   trt:
+    -   muscle:
+    -   display:
+
+-   Letter Plot:
