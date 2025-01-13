@@ -98,22 +98,22 @@ fit_lmer <- function(rv, alpha = 0.95) {
   print("Letters")
   print(lets)
   
-  # Plot 
-  # plot <- ests %>% 
-  #   as_tibble() %>%
-  #   ggplot(aes(x = display, y = emmean, color = muscle)) +
-  #     geom_point() +
-  #     geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.2) +
-  #     facet_wrap(~ trt) +
-  #     labs(title = paste("Estimated Marginal Means for", rv),
-  #          x = "Display",
-  #          y = rv) +
-  #     theme_bw() +
-  #     theme(
-  #       panel.grid.minor.x = element_blank(),
-  #       panel.grid.minor.y = element_blank()
-  #       ) 
-  # print(plot)
+  # Plot
+  plot <- ests %>%
+    as_tibble() %>%
+    ggplot(aes(x = display, y = emmean, color = muscle)) +
+      geom_point() +
+      geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.2) +
+      facet_wrap(~ trt) +
+      labs(title = paste("Estimated Marginal Means for", rv),
+           x = "Display",
+           y = rv) +
+      theme_bw() +
+      theme(
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()
+        )
+  print(plot)
 
 }
 
@@ -124,7 +124,7 @@ fit_lmer2 <- function(rv, alpha = 0.95) {
   print("Summary")
   print(summary(mod))
   
-  print(paste("ICC: ", icc(mod)))
+  print(performance::icc(mod))
 
   # Contrasts
   ests <- emmeans(mod, specs = ~ trt + display, infer = c(TRUE, TRUE), level = alpha)
@@ -200,11 +200,3 @@ fit_lmer2("coliforms")
     -   i.e. 42% of the variability in Average L\* is accounted for by the difference between batches (and the remaining 58% is due to the difference within batches).
 
     -   NOTE: We are using the Adjusted ICC.
-
--   ANOVA Output:
-
-    -   trt:
-    -   muscle:
-    -   display:
-
--   Letter Plot:
