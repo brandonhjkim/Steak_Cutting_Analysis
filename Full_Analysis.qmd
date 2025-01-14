@@ -9,6 +9,7 @@ embed-resources: true
 
 ```{r}
 #| message: false
+#| warning: false
 library(readxl)
 library(lme4)
 library(lmerTest)
@@ -86,6 +87,9 @@ fit_lmer <- function(rv, alpha = 0.95) {
   print("Summary")
   print(summary(mod))
   
+  print("anova summary")
+  print(anova(mod))
+  
   print(performance::icc(mod))
 
   # Contrasts
@@ -117,12 +121,22 @@ fit_lmer <- function(rv, alpha = 0.95) {
 
 }
 
+
+rv <- "coliforms" 
 fit_lmer2 <- function(rv, alpha = 0.95) {
   
   # Model 
   mod <- lmer(get(rv) ~ trt*display + (1 | batch), data = full)
+  anova(mod)
+  # dr. robinson thinks the one below....
+  mod <- lmer(get(rv) ~ trt*display + (1 | batch) + (1 | batch:trt) + (1 | batch:trt:display), data = full)
+  anova(mod)
+  mod
   print("Summary")
   print(summary(mod))
+  
+  print("anova summary")
+  print(anova(mod))
   
   print(performance::icc(mod))
 
@@ -130,6 +144,8 @@ fit_lmer2 <- function(rv, alpha = 0.95) {
   ests <- emmeans(mod, specs = ~ trt + display, infer = c(TRUE, TRUE), level = alpha)
   print("Contrasts")
   print(contrast(ests, method = "pairwise"))
+  emmip(mod, trt ~ display)
+    
 
   # Letters 
   lets <- cld(ests, alpha = alpha, Letters = letters)
