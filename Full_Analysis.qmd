@@ -83,7 +83,7 @@ full <- full %>%
 fit_lmer <- function(rv, alpha = 0.95) {
   
   # Model 
-  mod <- lmer(get(rv) ~ trt*muscle*display + (1 | batch), data = master)
+  mod <- lmer(get(rv) ~ trt*display*muscle + (1 | batch) + (1 | batch:trt) + (1 | batch:trt:display), data = master)
   print("Summary")
   print(summary(mod))
   
@@ -125,13 +125,8 @@ fit_lmer <- function(rv, alpha = 0.95) {
 rv <- "coliforms" 
 fit_lmer2 <- function(rv, alpha = 0.95) {
   
-  # Model 
-  mod <- lmer(get(rv) ~ trt*display + (1 | batch), data = full)
-  anova(mod)
   # dr. robinson thinks the one below....
   mod <- lmer(get(rv) ~ trt*display + (1 | batch) + (1 | batch:trt) + (1 | batch:trt:display), data = full)
-  anova(mod)
-  mod
   print("Summary")
   print(summary(mod))
   
